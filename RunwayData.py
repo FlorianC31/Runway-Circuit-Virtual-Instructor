@@ -1,7 +1,7 @@
 import sqlite3
 import param
 from CoordCalc import distance, new_point, convert_coord, bearing
-from math import cos, sin, radians
+from math import cos, sin, radians, degrees, asin
 
 
 class LocalCircuit:
@@ -23,7 +23,8 @@ class LocalCircuit:
         self.heading_db = None
         self.pos = None
         self.offset_threshold = None
-        self.papi_pitch = None
+        self.papi_angle = None
+        self.papi_vs = None
         self.length = None
         self.end_pos = None
         self.altitude = None
@@ -66,11 +67,14 @@ class LocalCircuit:
         self.offset_threshold = rwy_end_data[4]
 
         if rwy_end_data[5]:
-            self.papi_pitch = rwy_end_data[5]
+            self.papi_angle = rwy_end_data[5]
         elif rwy_end_data[6]:
-            self.papi_pitch = rwy_end_data[6]
+            self.papi_angle = rwy_end_data[6]
         else:
-            self.papi_pitch = None
+            self.papi_angle = degrees(asin(param.AIRCRAFT['Normal_VS'] /
+                                           (param.AIRCRAFT['Vapp'] * param.NM2FEET)))
+
+        self.papi_vs = param.AIRCRAFT['Vapp'] * param.NM2FEET * sin(radians(self.papi_angle))
 
         request = "SELECT length, secondary_lonx, secondary_laty, altitude, pattern_altitude \
                     FROM runway WHERE primary_end_id = " + str(self.runway_end_id)
@@ -91,13 +95,13 @@ class LocalCircuit:
 
         # ref: https://www.sia.aviation-civile.gouv.fr/pub/media/reglementation/file/c/h/chea_a_01_v2.pdf (tableau 1.3)
         if self.length < 800 * param.METER2FEET:
-            self.d_target = 150 * param.METER2FEET
+            self.d_target = 150 / param.NM2METER
         elif self.length < 1200 * param.METER2FEET:
-            self.d_target = 250 * param.METER2FEET
+            self.d_target = 250 / param.NM2METER
         elif self.length < 2400 * param.METER2FEET:
-            self.d_target = 300 * param.METER2FEET
+            self.d_target = 300 / param.NM2METER
         else:
-            self.d_target = 400 * param.METER2FEET
+            self.d_target = 400 / param.NM2METER
 
         target_dist = self.d_target + self.offset_threshold
 
@@ -106,7 +110,7 @@ class LocalCircuit:
     def print_rwy_data(self):
         piste_fin = new_point(self.pos, self.heading_mag, self.length + self.offset_threshold)
         print("check_distance_end", distance(self.end_pos, piste_fin), 'm')
-        print('PAPI', self.papi_pitch)
+        print('PAPI', self.papi_angle)
 
         print(convert_coord(self.target))
         print(self.pos)
@@ -126,10 +130,10 @@ class LocalCircuit:
             y *= -1
         return x, y
 
-    def get_descend_vs(self, speed):
-        speed_fpm = speed / 60 * param.NM2METER * param.METER2FEET
-        return -speed_fpm * sin(radians(self.papi_pitch))
-
+    def get_descent_vs(self, speed):
+        speed_fpm = speed / 60 * param.NM2FEET
+        return -speed_fpm * sin(radians(self.papi_angle))
+    
 
 if __name__ == "__main__":
     circuit = LocalCircuit(param.DB_PATH, param.CIRCUIT)

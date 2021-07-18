@@ -1,4 +1,4 @@
-from math import asin, sin, cos, sqrt, pow, radians, atan2, acos, pi, fmod, degrees
+from math import asin, sin, cos, sqrt, pow, radians, atan2, pi, degrees
 import param
 
 
@@ -103,8 +103,8 @@ def convert_coord(point):
 
 if __name__ == "__main__":
 
-    pt1 = (0.2545, 51.8853)
-    pt2 = (2.5735, 49.0034)
+    # pt1 = (0.2545, 51.8853)
+    # pt2 = (2.5735, 49.0034)
     c1 = 108.55
     c2 = 32.44
 

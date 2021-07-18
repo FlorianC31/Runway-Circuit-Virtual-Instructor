@@ -14,6 +14,7 @@ class SimConnection:
             try:
                 sim_connection = SimConnect()
                 fs_launched = True
+                print("Connection established")
             except ConnectionError:
                 print("FS non lancé")
                 sleep(5)
@@ -46,6 +47,9 @@ class SimConnection:
     def get_tas(self):
         return self.aq.get("AIRSPEED_TRUE")
 
+    def get_vs(self):
+        return self.aq.get("VERTICAL_SPEED")
+
     def get_indicated_alt(self):
         return self.aq.get("INDICATED_ALTITUDE")
 
@@ -62,18 +66,25 @@ class SimConnection:
         return degrees(self.aq.get("PLANE_HEADING_DEGREES_MAGNETIC"))
 
     def show_msg(self, msg):
-        self.sim_connexion.sendText(str(msg))
+        self.sim_connexion.sendText(str(msg), 1)
+        print(str(msg))
 
     def exit(self):
         self.sim_connexion.exit()
 
-    def turn_dist(self, safe=False):
+    def turn_dist(self, approach_speed=True, safe=False):
         g = param.G / param.NM2METER
         if safe:
-            angle = param.BANK_ANGLE_SAFE
+            angle = param.BANK_ANGLE_SAFE / 1.5
         else:
-            angle = param.BANK_ANGLE
+            angle = param.BANK_ANGLE / 1.5
 
-        speed = self.get_ground_speed() / 3600
+        if approach_speed:
+            speed = param.AIRCRAFT['Vapp'] / 3600
+        else:
+            speed = self.get_ground_speed() / 3600
 
-        return pow(speed, 2) / (tan(radians(angle)) * g)
+        d = pow(speed, 2) / (tan(radians(angle)) * g)
+        d += param.T_LAG * speed
+
+        return d
