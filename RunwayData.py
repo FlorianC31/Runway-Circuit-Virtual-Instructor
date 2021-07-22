@@ -35,6 +35,9 @@ class LocalCircuit:
         self.get_airport_data()
         self.get_rwy_data()
 
+        self.tmp_x = None
+        self.tmp_y = None
+
     def get_airport_data(self):
         request = "SELECT airport_id, mag_var, altitude, lonx, laty FROM airport WHERE ident='" + \
                   self.airport_ident + "'"
@@ -121,14 +124,21 @@ class LocalCircuit:
         return brg
 
     def local_coord(self, point):
-        brg = self.local_brg(point)
+        if point:
+            if point[0] and point[1]:
 
-        d = distance(self.pos, point, 'NM')
-        x = - d * cos(brg)
-        y = - d * sin(brg)
-        if self.side == "LHS":
-            y *= -1
-        return x, y
+                brg = self.local_brg(point)
+
+                d = distance(self.pos, point, 'NM')
+                x = - d * cos(brg)
+                y = - d * sin(brg)
+                if self.side == "LHS":
+                    y *= -1
+                self.tmp_x = x
+                self.tmp_y = y
+                return x, y
+            return self.tmp_x, self.tmp_y
+        return self.tmp_x, self.tmp_y
 
     def get_descent_vs(self, speed):
         speed_fpm = speed / 60 * param.NM2FEET

@@ -87,7 +87,7 @@ class CurrentCircuit(LocalCircuit):
             return False
 
     def is_final(self, pos, brg, alt):
-        alt_cond = alt < self.pattern_altitude + param.TOL_ALT
+        alt_cond = 20 < alt < self.pattern_altitude + param.TOL_ALT
         brg_cond = brg < param.TOL_ANG or brg >= 360 - param.TOL_ANG  # heading 360° more or less 45°
         pos_cond_x = -1.6 - param.TOL_DIS < pos[0] < self.length / 2
         pos_cond_y = 0 - param.TOL_DIS < pos[1] < 0 + param.TOL_DIS  # in the axis of the runway more or less tolerance
@@ -190,6 +190,8 @@ if __name__ == "__main__":
         if sm_position and not sm.get_ias() is None:
             plane_pos = circuit.local_coord(sm_position)  # In circuit local coord system
             plane_brg = brg_limit(sm.get_hdg_true() - circuit.heading_true)  # In circuit local coord system
+            if param.CIRCUIT['side'] == "RHS":
+                plane_brg = brg_limit(360 - plane_brg)
             plane_height = sm.get_true_alt() - circuit.airport_alt
             turn_d = sm.turn_dist()
 
@@ -197,13 +199,14 @@ if __name__ == "__main__":
             if new_phase:
                 phase_name = new_phase[1]
                 circuit.phase = new_phase[0]
-                # sm.show_msg("Entering " + phase_name)
+                if new_phase[0] == 3:
+                    sm.show_msg("Entering " + phase_name)
 
             circuit_msg = circuit.get_message(plane_pos, plane_height, turn_d, sm.is_on_ground(), sm.get_ias())
             if circuit_msg:
                 sm.show_msg(circuit_msg)
 
-            print(phase_name, round(plane_pos[0], 2), round(plane_pos[1], 2), round(plane_brg, 0),
+            print(circuit.phase, phase_name, round(plane_pos[0], 2), round(plane_pos[1], 2), round(plane_brg, 0),
                   round(plane_height, 0))
 
         sleep(param.ITERATION_DELAY)
