@@ -5,10 +5,12 @@ from math import cos, sin, radians, degrees, asin
 
 
 class LocalCircuit:
-    def __init__(self, db_path, circuit_input_data):
+    def __init__(self, db_path, circuit_input_data, position):
         self.connexion = sqlite3.connect(db_path)
+        # self.connexion.enable_load_extension(True)
         self.cursor = self.connexion.cursor()
-        self.airport_ident = circuit_input_data['airport']
+        # self.airport_ident = circuit_input_data['airport']
+        self.airport_ident = self.get_airport(position)
         self.rwy_ident = circuit_input_data['rwy']
         self.side = circuit_input_data['side']
 
@@ -143,7 +145,17 @@ class LocalCircuit:
     def get_descent_vs(self, speed):
         speed_fpm = speed / 60 * param.NM2FEET
         return -speed_fpm * sin(radians(self.papi_angle))
-    
+
+    def get_airport(self, pos):
+        print(pos)
+        request = "SELECT ident FROM airport WHERE (" + str(pos[1]) + " - laty) * (" + str(pos[1]) +\
+                  " - laty) + (" + str(pos[0]) + " - lonx) * (" + str(pos[0]) + " - lonx) < 1 ORDER BY (" + \
+                  str(pos[1]) + " - laty) * (" + str(pos[1]) + " - laty) + (" + str(pos[0]) + " - lonx) * (" +\
+                  str(pos[0]) + " - lonx)"
+        self.cursor.execute(request)
+        airport = self.cursor.fetchone()
+        return airport[0]
+
 
 if __name__ == "__main__":
     circuit = LocalCircuit(param.DB_PATH, param.CIRCUIT)

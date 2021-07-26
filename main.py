@@ -9,8 +9,8 @@ from IVAO_interface import Window
 
 class CurrentCircuit(LocalCircuit):
     def __init__(self, db_path, circuit_input_data, sim_connection):
-        LocalCircuit.__init__(self, db_path, circuit_input_data)
         self.sm = sim_connection
+        LocalCircuit.__init__(self, db_path, circuit_input_data, sm.get_position())
         self.phase = 10
         self.msg_displayed = {'start_descent': False,
                               'take_off': False,
@@ -188,8 +188,6 @@ if __name__ == "__main__":
     ivao_window = Window("IVAO Pilot Client")
     msfs_window = Window("Microsoft Flight Simulator")
 
-    print()
-
     while 1:
         sm_position = sm.get_position()
         if sm_position and not sm.get_ias() is None:
@@ -206,7 +204,7 @@ if __name__ == "__main__":
                 circuit.phase = new_phase[0]
 
                 if 0 < circuit.phase < 10:
-                    msg = param.CIRCUIT['airport'] + " traffic, "
+                    msg = circuit.airport_ident + " traffic, "
                     if circuit.phase == 1:
                         msg += "Airbone off"
                     elif circuit.phase > 1:
