@@ -69,6 +69,12 @@ class SimConnection:
         self.sim_connexion.sendText(str(msg), 0.1)
         print(str(msg))
 
+    def get_freq(self):
+        return self.aq.get("COM_ACTIVE_FREQUENCY:1")
+
+    def is_ivao_unicom(self):
+        return 122.799 < self.aq.get("COM_ACTIVE_FREQUENCY:1") < 122.801
+
     def exit(self):
         self.sim_connexion.exit()
 

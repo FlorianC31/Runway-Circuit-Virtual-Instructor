@@ -188,6 +188,8 @@ if __name__ == "__main__":
     ivao_window = Window("IVAO Pilot Client")
     msfs_window = Window("Microsoft Flight Simulator")
 
+    print()
+
     while 1:
         sm_position = sm.get_position()
         if sm_position and not sm.get_ias() is None:
@@ -215,7 +217,7 @@ if __name__ == "__main__":
 
                     if param.DISPLAY_MSG[param.MSG_KEYS[circuit.phase]]:
                         sm.show_msg(msg)
-                    if param.IVAO_SEND_MSG[param.MSG_KEYS[circuit.phase]]:
+                    if param.IVAO_SEND_MSG[param.MSG_KEYS[circuit.phase]] and sm.is_ivao_unicom():
                         ivao_window.send_txt(30, 350, msg)
 
             circuit_msg = circuit.get_message(plane_pos, plane_height, turn_d, sm.is_on_ground(), sm.get_ias())
