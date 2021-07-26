@@ -4,6 +4,7 @@ from RunwayData import LocalCircuit
 from CoordCalc import brg_limit
 from SimConnectInterface import SimConnection
 from math import pi, asin, degrees, radians, sin
+from IVAO_interface import Window
 
 
 class CurrentCircuit(LocalCircuit):
@@ -184,6 +185,8 @@ if __name__ == "__main__":
     sm = SimConnection()
     circuit = CurrentCircuit(param.DB_PATH, param.CIRCUIT, sm)
     phase_name = ""
+    ivao_window = Window("IVAO Pilot Client")
+    msfs_window = Window("Microsoft Flight Simulator")
 
     while 1:
         sm_position = sm.get_position()
@@ -199,8 +202,21 @@ if __name__ == "__main__":
             if new_phase:
                 phase_name = new_phase[1]
                 circuit.phase = new_phase[0]
-                if new_phase[0] == 3:
-                    sm.show_msg("Entering " + phase_name)
+
+                if 0 < circuit.phase < 10:
+                    msg = param.CIRCUIT['airport'] + " traffic, "
+                    if circuit.phase == 1:
+                        msg += "Airbone off"
+                    elif circuit.phase > 1:
+                        msg += param.AIRCRAFT['name'] + " Entering " + phase_name
+                    msg += " rwy" + param.CIRCUIT['rwy']
+                    if 2 <= circuit.phase <= 4:
+                        msg += " " + param.CIRCUIT['side'] + " circuit"
+
+                    if param.DISPLAY_MSG[param.MSG_KEYS[circuit.phase]]:
+                        sm.show_msg(msg)
+                    if param.IVAO_SEND_MSG[param.MSG_KEYS[circuit.phase]]:
+                        ivao_window.send_txt(30, 350, msg)
 
             circuit_msg = circuit.get_message(plane_pos, plane_height, turn_d, sm.is_on_ground(), sm.get_ias())
             if circuit_msg:

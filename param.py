@@ -1,9 +1,36 @@
 # DB_PATH = r"C:\Users\Florian\AppData\Roaming\ABarthel\little_navmap_db\little_navmap_navigraph.sqlite"
 DB_PATH = r"C:\Users\Florian\AppData\Roaming\ABarthel\little_navmap_db\little_navmap_msfs.sqlite"
 
-CIRCUIT = {'airport': "LFMW", 'rwy': "11", 'side': "RHS"}
-AIRCRAFT = {'Vrotate': 55, 'Vinit_climb': 75, 'Vcruise': 105, 'Vapp': 75, 'Vland': 65, 'Max_climb_speed': 80,
-            'Min_VS': 350, 'Normal_VS': 500, 'Vstall': 40}
+CIRCUIT = {'airport': "LFBR",
+           'rwy': "30",
+           'side': "LHS"}
+
+AIRCRAFT = {'name': 'C172',
+            'Vrotate': 55,
+            'Vinit_climb': 75,
+            'Vcruise': 105,
+            'Vapp': 75,
+            'Vland': 65,
+            'Max_climb_speed': 80,
+            'Min_VS': 350,
+            'Normal_VS': 500,
+            'Vstall': 40}
+
+DISPLAY_MSG = {'enter_init_climb': False,
+               'enter_crosswind': False,
+               'enter_downwind': True,
+               'enter_base': False,
+               'enter_final': False,
+               'enter_ground': False}
+
+IVAO_SEND_MSG = {'enter_init_climb': True,
+                 'enter_crosswind': False,
+                 'enter_downwind': True,
+                 'enter_base': False,
+                 'enter_final': True,
+                 'enter_ground': False}
+
+MSG_KEYS = ['enter_ground', 'enter_init_climb', 'enter_crosswind', 'enter_downwind', 'enter_base', 'enter_final']
 
 INITIAL_MIN_HEIGHT = 500  # ft AAL
 INIT_CLIMB_TIME = 60  # s
