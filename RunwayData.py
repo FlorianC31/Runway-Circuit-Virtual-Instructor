@@ -147,7 +147,6 @@ class LocalCircuit:
         return -speed_fpm * sin(radians(self.papi_angle))
 
     def get_airport(self, pos):
-        print(pos)
         request = "SELECT ident FROM airport WHERE (" + str(pos[1]) + " - laty) * (" + str(pos[1]) +\
                   " - laty) + (" + str(pos[0]) + " - lonx) * (" + str(pos[0]) + " - lonx) < 1 ORDER BY (" + \
                   str(pos[1]) + " - laty) * (" + str(pos[1]) + " - laty) + (" + str(pos[0]) + " - lonx) * (" +\
@@ -158,7 +157,7 @@ class LocalCircuit:
 
 
 if __name__ == "__main__":
-    circuit = LocalCircuit(param.DB_PATH, param.CIRCUIT)
+    circuit = LocalCircuit(param.DB_PATH, param.CIRCUIT, (1.2, 43.1))
     # print(database.get_airport_id(AIRPORT))
     # print(database.get_mag_var(AIRPORT))
     # print(database.get_airport_coord(AIRPORT))

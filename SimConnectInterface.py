@@ -73,6 +73,8 @@ class SimConnection:
         return self.aq.get("COM_ACTIVE_FREQUENCY:1")
 
     def is_ivao_unicom(self):
+        if self.aq.get("COM_ACTIVE_FREQUENCY:1") is None:
+            return False
         return 122.799 < self.aq.get("COM_ACTIVE_FREQUENCY:1") < 122.801
 
     def exit(self):
