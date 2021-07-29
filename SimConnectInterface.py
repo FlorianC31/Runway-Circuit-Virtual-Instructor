@@ -66,7 +66,7 @@ class SimConnection:
         return degrees(self.aq.get("PLANE_HEADING_DEGREES_MAGNETIC"))
 
     def show_msg(self, msg):
-        self.sim_connexion.sendText(str(msg), 0.1)
+        self.sim_connexion.sendText(str(msg), 1)
         print(str(msg))
 
     def get_freq(self):

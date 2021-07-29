@@ -2,7 +2,7 @@
 DB_PATH = r"C:\Users\Florian\AppData\Roaming\ABarthel\little_navmap_db\little_navmap_msfs.sqlite"
 
 CIRCUIT = {'airport': "LFBR",
-           'rwy': "30",
+           'rwy': "29",
            'side': "LHS"}
 
 AIRCRAFT = {'name': 'C172',

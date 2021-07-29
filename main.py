@@ -32,13 +32,17 @@ class CurrentCircuit(LocalCircuit):
         else:
             self.turn_side_msg = "Turn right in "
 
-        self.crosswind_dist = param.AIRCRAFT['Vinit_climb'] / 3600 * param.CROSSWIND_TIME
-
-        self.max_crosswind_x = 500 / param.AIRCRAFT['Min_VS'] * param.AIRCRAFT['Max_climb_speed'] / 60 + self.length
-        # time to climb to 500ft at min VS and max climb speed, + runway length
-
         self.descent_angle = degrees(asin(param.AIRCRAFT['Normal_VS'] /
                                           (param.AIRCRAFT['Vapp'] * param.NM2FEET / 60)))
+
+        self.crosswind_dist = None
+        self.max_crosswind_x = None
+        self.get_crosswind_data()
+
+    def get_crosswind_data(self):
+        self.crosswind_dist = param.AIRCRAFT['Vinit_climb'] / 3600 * param.CROSSWIND_TIME
+        self.max_crosswind_x = 500 / param.AIRCRAFT['Min_VS'] * param.AIRCRAFT['Max_climb_speed'] / 60 + self.length
+        # time to climb to 500ft at min VS and max climb speed, + runway length
 
     def dist2land(self, pos, turn_radius):
         delta_turn = turn_radius * (2 - pi / 2)
@@ -124,21 +128,22 @@ class CurrentCircuit(LocalCircuit):
                       self.is_final]
         name = ['On the ground', 'Inital Climb', 'Crosswind', 'Downwind', 'Base', 'Final']
 
-        current_phase = None
+        current_phase = 10
         for p in range(0, 6):
             check_fct = list_check[p]
             if check_fct(pos, brg, alt):
                 current_phase = p
                 if self.phase != current_phase and \
-                        ((self.phase == 10 and (current_phase == 3 or current_phase) == 5) or self.phase < 10):
+                        ((self.phase == 10 and current_phase in (0, 3, 5)) or self.phase < 10):
                     self.phase_name = name[current_phase]
                     self.phase = current_phase
                     self.situation_msg()
                     if p == 0:
+                        self.get_crosswind_data()
                         self.reinit_msg()
                     break
 
-        if not current_phase:
+        if current_phase == 10:
             self.phase = 10
             self.phase_name = "Outside airport circuit"
 
@@ -192,18 +197,21 @@ class CurrentCircuit(LocalCircuit):
 
     def situation_msg(self):
         if 0 < self.phase < 10:
-            msg = self.airport_ident + " traffic, "
+            msg = self.airport_ident + " traffic, " + param.AIRCRAFT['name']
             if self.phase == 1:
-                msg += "Airborne off"
-            elif self.phase > 1:
-                msg += param.AIRCRAFT['name'] + " Entering " + self.phase_name
-            msg += " rwy" + param.CIRCUIT['rwy']
+                msg += " Airborne off"
+            elif self.phase == 5:
+                msg += " on Final"
+            elif 2 <= self.phase <= 4:
+                msg += " Entering " + self.phase_name
+
+            msg += " Runway " + param.CIRCUIT['rwy']
             if 2 <= self.phase <= 4:
                 msg += " " + self.side + " circuit"
 
             if param.DISPLAY_MSG[param.MSG_KEYS[self.phase]]:
                 self.sm.show_msg(msg)
-            if param.IVAO_SEND_MSG[param.MSG_KEYS[self.phase]] and self.sm.is_ivao_unicom():
+            if param.IVAO_SEND_MSG[param.MSG_KEYS[self.phase]] and self.sm.is_ivao_unicom() and self.ivao_window.hwnd:
                 self.ivao_window.send_txt(30, 350, msg)
                 self.msfs_window.show()
 
@@ -212,10 +220,19 @@ if __name__ == "__main__":
 
     sm = SimConnection()
     circuit = CurrentCircuit(param.DB_PATH, param.CIRCUIT, sm)
+    airport_timer = 0
 
     while 1:
         sm_position = sm.get_position()
         if sm_position and not sm.get_ias() is None:
+
+            # If outside airport circuit, the closest airport is updated each 30s
+            if circuit.phase == 10:
+                airport_timer += 1
+                if airport_timer >= 30 / param.ITERATION_DELAY:
+                    airport_timer = 0
+                    circuit.get_closest_airport(sm_position)
+
             plane_pos = circuit.local_coord(sm_position)  # In circuit local coord system
             plane_brg = brg_limit(sm.get_hdg_true() - circuit.heading_true)  # In circuit local coord system
             if circuit.side == "RHS":
@@ -226,7 +243,8 @@ if __name__ == "__main__":
             circuit.update_phase(plane_pos, plane_brg, plane_height)
             circuit.get_message(plane_pos, plane_height, turn_d, sm.is_on_ground(), sm.get_ias())
 
-            print(circuit.phase, circuit.phase_name, round(plane_pos[0], 2), round(plane_pos[1], 2),
-                  round(plane_brg, 0), round(plane_height, 0))
+            # Print in terminal the main flight parameters
+            print(circuit.airport_ident, circuit.rwy_ident, circuit.phase, circuit.phase_name, round(plane_pos[0], 2),
+                  round(plane_pos[1], 2), round(plane_brg, 0), round(plane_height, 0))
 
         sleep(param.ITERATION_DELAY)

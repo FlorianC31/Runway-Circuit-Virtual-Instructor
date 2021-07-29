@@ -10,7 +10,6 @@ class LocalCircuit:
         # self.connexion.enable_load_extension(True)
         self.cursor = self.connexion.cursor()
         # self.airport_ident = circuit_input_data['airport']
-        self.airport_ident = self.get_airport(position)
         self.rwy_ident = circuit_input_data['rwy']
         self.side = circuit_input_data['side']
 
@@ -18,6 +17,10 @@ class LocalCircuit:
         self.mag_var = None
         self.airport_alt = None
         self.airport_pos = None
+        self.runway_list = []
+        self.airport_ident = None
+
+        self.get_closest_airport(position)
 
         self.runway_end_id = None
         self.heading_mag = None
@@ -34,26 +37,18 @@ class LocalCircuit:
         self.d_target = None
         self.target = None
 
-        self.get_airport_data()
-        self.get_rwy_data()
+        self.get_rwy_data(self.rwy_ident)
 
         self.tmp_x = None
         self.tmp_y = None
 
-    def get_airport_data(self):
-        request = "SELECT airport_id, mag_var, altitude, lonx, laty FROM airport WHERE ident='" + \
-                  self.airport_ident + "'"
-        self.cursor.execute(request)
-        result = self.cursor.fetchone()
-        self.airport_id = result[0]
-        self.mag_var = result[1]
-        self.airport_alt = result[2]
-        self.airport_pos = (result[3], result[4])
-
-    def get_rwy_data(self):
+    def get_rwy_data(self, rwy_ident):
+        print(self.airport_ident, self.airport_id)
+        print(self.runway_list)
+        print(rwy_ident)
         request = "SELECT runway_end_id, heading, lonx, laty, offset_threshold, left_vasi_pitch, right_vasi_pitch \
                     FROM runway_end AS A \
-                    WHERE name='" + self.rwy_ident + "' AND ( \
+                    WHERE name='" + rwy_ident + "' AND ( \
                         (SELECT primary_end_id from runway AS B \
                         WHERE B.airport_id=" + str(self.airport_id) + " and B.primary_end_id=A.runway_end_id) \
                     OR \
@@ -146,14 +141,42 @@ class LocalCircuit:
         speed_fpm = speed / 60 * param.NM2FEET
         return -speed_fpm * sin(radians(self.papi_angle))
 
-    def get_airport(self, pos):
-        request = "SELECT ident FROM airport WHERE (" + str(pos[1]) + " - laty) * (" + str(pos[1]) +\
-                  " - laty) + (" + str(pos[0]) + " - lonx) * (" + str(pos[0]) + " - lonx) < 1 ORDER BY (" + \
-                  str(pos[1]) + " - laty) * (" + str(pos[1]) + " - laty) + (" + str(pos[0]) + " - lonx) * (" +\
-                  str(pos[0]) + " - lonx)"
+    def get_airport_data(self):
+        request = "SELECT airport_id, mag_var, altitude, lonx, laty FROM airport WHERE ident='" + \
+                  self.airport_ident + "'"
         self.cursor.execute(request)
-        airport = self.cursor.fetchone()
-        return airport[0]
+        result = self.cursor.fetchone()
+        self.airport_id = result[0]
+        self.mag_var = result[1]
+        self.airport_alt = result[2]
+        self.airport_pos = (result[3], result[4])
+
+    def get_closest_airport(self, pos):
+        request = "SELECT airport_id, mag_var, altitude, lonx, laty, ident FROM airport WHERE (" + str(pos[1]) +\
+                  " - laty) * (" + str(pos[1]) + " - laty) + (" + str(pos[0]) + " - lonx) * (" + str(pos[0]) + \
+                  " - lonx) < 1 ORDER BY (" + str(pos[1]) + " - laty) * (" + str(pos[1]) + " - laty) + (" + \
+                  str(pos[0]) + " - lonx) * (" + str(pos[0]) + " - lonx)"
+        self.cursor.execute(request)
+        result = self.cursor.fetchone()
+        self.airport_id = result[0]
+        self.mag_var = result[1]
+        self.airport_alt = result[2]
+        self.airport_pos = (result[3], result[4])
+        self.airport_ident = result[5]
+
+        request = "SELECT name FROM runway_end AS A \
+                    WHERE ( \
+                        (SELECT primary_end_id from runway AS B \
+                        WHERE B.airport_id=" + str(self.airport_id) + " and B.primary_end_id=A.runway_end_id) \
+                    OR \
+                        (SELECT secondary_end_id from runway AS B \
+                        WHERE B.airport_id=" + str(self.airport_id) + " and B.secondary_end_id=A.runway_end_id) \
+                    )"
+        self.cursor.execute(request)
+        self.runway_list = []
+        result = self.cursor.fetchall()
+        for rwy in result:
+            self.runway_list.append(rwy[0])
 
 
 if __name__ == "__main__":

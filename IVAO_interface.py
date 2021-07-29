@@ -39,7 +39,10 @@ class Window:
                 # return hwnd
 
         win32gui.EnumWindows(findit, self.name)
-        return thelist[0]
+        if thelist:
+            return thelist[0]
+        else:
+            return None
 
     def close(self):
         print("Fermeture de", self.name)
@@ -107,6 +110,14 @@ class Window:
 if __name__ == '__main__':
     ivao_window = Window("IVAO Pilot Client")
     msfs_window = Window("Microsoft Flight Simulator")
+    unicom_window = Window("*new")
 
     print(ivao_window.hwnd)
     print(msfs_window.hwnd)
+    print(unicom_window.hwnd)
+
+    unicom_window.show()
+    # unicom_window.click(276, 423)
+    unicom_window.click(113, 117)
+    keyboard.press_and_release('shift+left')
+    # keyboard.press_and_release('ctrl+c')
