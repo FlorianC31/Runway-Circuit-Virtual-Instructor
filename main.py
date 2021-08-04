@@ -1,7 +1,7 @@
 import param
 from time import sleep
 from RunwayData import LocalCircuit
-from CoordCalc import brg_limit
+from CoordCalc import brg_limit, resultante
 from SimConnectInterface import SimConnection
 from math import pi, asin, degrees, radians, sin
 from IVAO_interface import Window
@@ -25,12 +25,16 @@ class CurrentCircuit(LocalCircuit):
                               'turn_final': False,
                               'flaps_up': False,
                               'reduce_speed': False,
-                              'maintain_alt': False}
+                              'maintain_alt': False,
+                              'light_on': False,
+                              'light_off': False}
 
         if self.side == "LHS":
             self.turn_side_msg = "Turn left in "
+            self.side_msg = "left hand"
         else:
             self.turn_side_msg = "Turn right in "
+            self.side_msg = "right hand"
 
         self.descent_angle = degrees(asin(param.AIRCRAFT['Normal_VS'] /
                                           (param.AIRCRAFT['Vapp'] * param.NM2FEET / 60)))
@@ -195,6 +199,20 @@ class CurrentCircuit(LocalCircuit):
             self.sm.show_msg(self.turn_side_msg + "Final, reduce speed to " + str(param.AIRCRAFT['Vland']) +
                              "kt and set full Flap")
 
+        elif self.phase == 10 and not self.msg_displayed['light_off'] and \
+                (self.airport_ident != param.CIRCUIT['start_airport'] or resultante(position) > param.LIGHT_OFF_DIST):
+            self.sm.show_msg("Landing Light OFF")
+            self.msg_displayed['light_off'] = True
+
+        elif self.phase == 10 and self.airport_ident == param.CIRCUIT['airport'] and \
+                resultante(position) < param.LIGHT_ON_DIST and not self.msg_displayed['light_on']:
+            self.sm.show_msg("Landing Light ON")
+            self.msg_displayed['light_on'] = True
+
+        # print(self.phase == 10, self.airport_ident == param.CIRCUIT['airport'], resultante(position) < 1,
+        #       not self.msg_displayed['light_on'])
+        # print(resultante(position))
+
     def situation_msg(self):
         if 0 < self.phase < 10:
             msg = self.airport_ident + " traffic, " + param.AIRCRAFT['name']
@@ -203,11 +221,9 @@ class CurrentCircuit(LocalCircuit):
             elif self.phase == 5:
                 msg += " on Final"
             elif 2 <= self.phase <= 4:
-                msg += " Entering " + self.phase_name
+                msg += " join " + self.side_msg + " " + self.phase_name
 
             msg += " Runway " + param.CIRCUIT['rwy']
-            if 2 <= self.phase <= 4:
-                msg += " " + self.side + " circuit"
 
             if param.DISPLAY_MSG[param.MSG_KEYS[self.phase]]:
                 self.sm.show_msg(msg)

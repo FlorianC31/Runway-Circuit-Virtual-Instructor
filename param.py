@@ -1,9 +1,10 @@
 # DB_PATH = r"C:\Users\Florian\AppData\Roaming\ABarthel\little_navmap_db\little_navmap_navigraph.sqlite"
 DB_PATH = r"C:\Users\Florian\AppData\Roaming\ABarthel\little_navmap_db\little_navmap_msfs.sqlite"
 
-CIRCUIT = {'airport': "LFBR",
-           'rwy': "29",
-           'side': "LHS"}
+CIRCUIT = {'airport': "LFMF",
+           'rwy': "28L",
+           'side': "LHS",
+           'start_airport': "LFMN"}
 
 AIRCRAFT = {'name': 'C172',
             'Vrotate': 55,
@@ -42,6 +43,9 @@ TOL_DIS = 0.4  # NM
 TOL_ANG = 45  # °
 TOL_ALT = 300  # ft
 FLAPS_UP_ALT = 300  # ft
+
+LIGHT_ON_DIST = 5  # NM from airport
+LIGHT_OFF_DIST = 10  # NM from airport
 
 METER2FEET = 3.28084
 NM2METER = 1852

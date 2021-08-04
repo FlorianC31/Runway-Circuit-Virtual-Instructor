@@ -33,6 +33,10 @@ def bearing(point_a, point_b, rad=False):
         return brg_limit(degrees(brg + pi))
 
 
+def resultante(pos):
+    return sqrt(pow(pos[0], 2) + pow(pos[1], 2))
+
+
 def brg_limit(brg, rad=False):
 
     if rad:

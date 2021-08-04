@@ -20,7 +20,7 @@ class LocalCircuit:
         self.runway_list = []
         self.airport_ident = None
 
-        self.get_closest_airport(position)
+        self.get_closest_airport(position, False)
 
         self.runway_end_id = None
         self.heading_mag = None
@@ -151,7 +151,7 @@ class LocalCircuit:
         self.airport_alt = result[2]
         self.airport_pos = (result[3], result[4])
 
-    def get_closest_airport(self, pos):
+    def get_closest_airport(self, pos, runway_param=True):
         request = "SELECT airport_id, mag_var, altitude, lonx, laty, ident FROM airport WHERE (" + str(pos[1]) +\
                   " - laty) * (" + str(pos[1]) + " - laty) + (" + str(pos[0]) + " - lonx) * (" + str(pos[0]) + \
                   " - lonx) < 1 ORDER BY (" + str(pos[1]) + " - laty) * (" + str(pos[1]) + " - laty) + (" + \
@@ -177,6 +177,11 @@ class LocalCircuit:
         result = self.cursor.fetchall()
         for rwy in result:
             self.runway_list.append(rwy[0])
+
+        if runway_param or self.airport_ident == param.CIRCUIT['airport']:
+            self.rwy_ident = param.CIRCUIT['rwy']
+        else:
+            self.rwy_ident = self.runway_list[0]
 
 
 if __name__ == "__main__":
